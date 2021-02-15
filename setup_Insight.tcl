@@ -5,7 +5,7 @@ proc ::plugins::DGUI::setup_aspect_Insight {} {
 	variable page_bg_image "[plugin_directory]/DGUI/bg_Insight.jpg"
 	variable bg_color "#ffffff"
 	variable font_color "#7f879a"
-	variable page_title_color "#7f879a"
+	variable page_title_color black
 	variable remark_color orange
 	variable error_color red
 	variable disabled_color "#ddd"
