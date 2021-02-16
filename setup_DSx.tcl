@@ -21,7 +21,9 @@ proc ::plugins::DGUI::setup_aspect_DSx {} {
 	variable button_font "font"
 	variable button_font_fill $::DSx_settings(font_colour)
 	variable button_fill white
+	
 	variable entry_relief sunken
+	variable entry_bg_color $::DSx_settings(bg_colour)
 	
 	variable listbox_relief sunken
 	variable listbox_bwidth 1

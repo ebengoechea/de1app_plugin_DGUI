@@ -1,28 +1,26 @@
-# Sets up DGUI aspect variables for the Insight skin.
+# Sets up DGUI aspect variables for the MimojaCafe skin. Adapt to the theme chosen by the user. 
 
-proc ::plugins::DGUI::setup_aspect_Insight {} {
-	# See skins/Insight/skin.tcl
-	#variable bg_color "#ffffff"
-	variable bg_color "#edecfa"
-	variable font_color "#7f879a"
-	variable page_title_color black
+proc ::plugins::DGUI::setup_aspect_MimojaCafe {} {
+	variable bg_color [theme background]
+	variable font_color [theme background_text]
+	variable page_title_color $font_color
 	variable remark_color orange
 	variable error_color red
 	variable disabled_color "#ddd"
 	variable highlight_color $font_color
 	variable insert_bg_color orange
-	variable font "Helv"
-	variable font_size 7
-	variable header_font "Helv_bold"
-	variable header_font_size 11
-	variable section_font_size 10	
+	variable font "Mazzard Regular"
+	variable font_size 15
+	variable header_font "Mazzard Regular"
+	variable header_font_size 22
+	variable section_font_size 20
 	
 	variable entry_relief flat
 	variable entry_bg_color "#ffffff"
 	
-	variable button_font "Helv_bold"
-	variable button_font_fill "#ffffff"
-	variable button_fill "#c0c5e3"
+	variable button_font "Mazzard Regular"
+	variable button_font_fill [theme button_text_light]
+	variable button_fill [theme button]
 	
 	variable listbox_relief flat
 	variable listbox_bwidth 0

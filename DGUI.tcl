@@ -48,7 +48,9 @@ namespace eval ::plugins::DGUI {
 	variable button_font "font"
 	variable button_font_fill "#ffffff"
 	variable button_fill white
+	
 	variable entry_relief sunken
+	variable entry_bg_color "#ffffff"	
 	
 	variable listbox_relief sunken
 	variable listbox_bwidth 1
@@ -131,7 +133,11 @@ proc ::plugins::DGUI::main {} {
 	
 	set skin $::settings(skin)
 	set skin_src_fn "[plugin_directory]/DGUI/setup_${skin}.tcl"
-	if { [file exists $skin_src_fn] } { source $skin_src_fn }
+	if { [file exists $skin_src_fn] } { 
+		source $skin_src_fn 	
+	} else { 
+		source "[plugin_directory]/DGUI/setup_Insight.tcl"
+	}
 	setup_aspect
 	
 	foreach ns {IS NUME TXT} { ::plugins::DGUI::${ns}::setup_ui }	
@@ -151,44 +157,45 @@ proc ::plugins::DGUI::setup_aspect { } {
 	if { [namespace which -command "::plugins::DGUI::setup_aspect_$skin"] ne "" } {
 		::plugins::DGUI::setup_aspect_$skin
 	} else {
-		# Default hardcoded aspect if nothing selected (use Insight defaults)
-		variable page_bg_image "[plugin_directory]/DGUI/bg_default.jpg"
-		
-		variable bg_color "#ffffff"
-		variable font_color "#7f879a"
-		variable page_title_color "#7f879a"
-		variable remark_color orange
-		variable error_color red
-		variable disabled_color "#ddd"
-		variable highlight_color $font_color
-		variable insert_bg_color orange
-		variable font "Helv"
-		variable font_size 7
-		variable header_font "Helv_bold"
-		variable header_font_size 11
-		variable section_font_size 10
-		variable entry_relief flat
-		
-		variable button_font "Helv_bold"
-		variable button_font_fill "#ffffff"
-		variable button_fill "#c0c5e3"
-				
-		variable listbox_relief flat
-		variable listbox_bwidth 0
-		variable listbox_fg $font_color
-		variable listbox_sfg black
-		variable listbox_bg $bg_color
-		variable listbox_sbg "#c0c4e1"
-		variable listbox_sbwidth 0
-		variable listbox_hthickness 1
-		variable listbox_hcolor $font_color
-
-		variable scrollbar_bwidth 0
-		variable scrollbar_relief flat		
-		variable scrollbar_bg "#d3dbf3"
-		variable scrollbar_fg "#FFFFFF"
-		variable scrollbar_troughcolor "#f7f6fa"
-		variable scrollbar_hthickness 0			
+		::plugins::DGUI::setup_aspect_Insight
+#		# Default hardcoded aspect if nothing selected (use Insight defaults)
+#		#variable page_bg_image "[plugin_directory]/DGUI/bg_default.jpg"
+#		variable page_bg_image ""
+#		variable bg_color "#ffffff"
+#		variable font_color "#7f879a"
+#		variable page_title_color "#7f879a"
+#		variable remark_color orange
+#		variable error_color red
+#		variable disabled_color "#ddd"
+#		variable highlight_color $font_color
+#		variable insert_bg_color orange
+#		variable font "Helv"
+#		variable font_size 7
+#		variable header_font "Helv_bold"
+#		variable header_font_size 11
+#		variable section_font_size 10
+#		variable entry_relief flat
+#		
+#		variable button_font "Helv_bold"
+#		variable button_font_fill "#ffffff"
+#		variable button_fill "#c0c5e3"
+#				
+#		variable listbox_relief flat
+#		variable listbox_bwidth 0
+#		variable listbox_fg $font_color
+#		variable listbox_sfg black
+#		variable listbox_bg $bg_color
+#		variable listbox_sbg "#c0c4e1"
+#		variable listbox_sbwidth 0
+#		variable listbox_hthickness 1
+#		variable listbox_hcolor $font_color
+#
+#		variable scrollbar_bwidth 0
+#		variable scrollbar_relief flat		
+#		variable scrollbar_bg "#d3dbf3"
+#		variable scrollbar_fg "#FFFFFF"
+#		variable scrollbar_troughcolor "#f7f6fa"
+#		variable scrollbar_hthickness 0			
 	}
 }
 
@@ -502,9 +509,14 @@ proc ::plugins::DGUI::add_page { page args } {
 	array set opts $args
 	set has_ns [page_name_is_namespace $page]
 
-	if { [ifexists opts(-add_bg_img) 1] == 1 } {
+	if { [ifexists opts(-add_bg_img) 1] == 1 && $::plugins::DGUI::page_bg_image ne "" } {
 		add_de1_image $page 0 0 $::plugins::DGUI::page_bg_image
+	} else {
+		set background_id [.can create rect 0 0 [rescale_x_skin 2560] [rescale_y_skin 1600] \
+			-fill $::plugins::DGUI::bg_color -width 0 -state "hidden"]
+		add_visual_item_to_context $page $background_id
 	}
+	
 	if { $has_ns } {
 		set "${page}::data(page_name)" $page
 		lappend ::plugins::DGUI::pages $page
@@ -723,7 +735,7 @@ proc ::plugins::DGUI::add_button { page widget_name x0 y0 x1 y1 label command ar
 	set ry0 [rescale_y_skin $y0]
 	set ry1 [rescale_y_skin $y1]
 	
-	args_add_option_if_not_exists args -fill $::plugins::DGUI::bg_color
+	args_add_option_if_not_exists args -fill $::plugins::DGUI::entry_bg_color
 	args_add_option_if_not_exists args -outline $::plugins::DGUI::font_color
 	args_add_option_if_not_exists args -disabledoutline $::plugins::DGUI::disabled_color
 	args_add_option_if_not_exists args -activeoutline $::plugins::DGUI::remark_color
@@ -1038,7 +1050,7 @@ proc ::plugins::DGUI::add_entry { page field_name x_label y_label x_widget y_wid
 	args_add_option_if_not_exists args -justify left
 	args_add_option_if_not_exists args -relief $::plugins::DGUI::entry_relief
 	args_add_option_if_not_exists args -borderwidth 1 
-	args_add_option_if_not_exists args -bg $::plugins::DGUI::bg_color
+	args_add_option_if_not_exists args -bg $::plugins::DGUI::entry_bg_color
 	args_add_option_if_not_exists args -highlightthickness 1
 	args_add_option_if_not_exists args -highlightcolor $::plugins::DGUI::font_color
 	args_add_option_if_not_exists args -foreground $::plugins::DGUI::font_color 
