@@ -152,7 +152,7 @@ proc ::plugins::DGUI::setup_aspect { } {
 		::plugins::DGUI::setup_aspect_$skin
 	} else {
 		# Default hardcoded aspect if nothing selected (use Insight defaults)
-		variable page_bg_image "[plugins_directory]/DGUI/bg_default.jpg"
+		variable page_bg_image "[plugin_directory]/DGUI/bg_default.jpg"
 		
 		variable bg_color "#ffffff"
 		variable font_color "#7f879a"
