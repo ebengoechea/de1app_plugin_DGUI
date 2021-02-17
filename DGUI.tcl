@@ -489,11 +489,11 @@ proc ::plugins::DGUI::show_or_hide_widgets { show widgets {ns {}} { context {}} 
 }
 
 proc ::plugins::DGUI::show_widgets { widgets {ns {}} { context {} } } {
-	show_or_hide_widgets 0 $widgets $ns $context
+	show_or_hide_widgets 1 $widgets $ns $context
 }
 
 proc ::plugins::DGUI::hide_widgets { widgets {ns {}} { context {}} } {
-	show_or_hide_widgets 1 $widgets $ns $context
+	show_or_hide_widgets 0 $widgets $ns $context
 }
 		
 # Adds a standard DYE dialog page to the DE1 GUI.
@@ -1272,7 +1272,7 @@ proc ::plugins::DGUI::add_multiline_entry { page field_name x_label y_label x_wi
 	
 	args_add_option_if_not_exists args -relief $::plugins::DGUI::entry_relief
 	args_add_option_if_not_exists args -borderwidth 1 
-	args_add_option_if_not_exists args -bg $::plugins::DGUI::bg_color
+	args_add_option_if_not_exists args -bg $::plugins::DGUI::entry_bg_color
 	args_add_option_if_not_exists args -highlightthickness 1
 	args_add_option_if_not_exists args -highlightcolor $::plugins::DGUI::font_color
 	args_add_option_if_not_exists args -foreground $::plugins::DGUI::font_color 
@@ -1912,7 +1912,6 @@ proc ::plugins::DGUI::IS::load_page { item_type item_variable items args } {
 	}
 	
 	# If no selected is given, but item_variable is given and it has a current value, use it as selected.
-	# TODO: Keep -selected, given that we new have -item_variable???
 	set data(item_variable) $item_variable
 	set selected [ifexists opts(-selected) ""]
 	if { $item_variable ne "" && $selected eq "" && [subst "\$$item_variable"] ne "" } {
