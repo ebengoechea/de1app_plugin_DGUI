@@ -789,12 +789,18 @@ proc ::plugins::DGUI::rounded_rectangle {context x1 y1 x2 y2 radius colour } {
 	set y2 [rescale_y_skin $y2]
 	if { [info exists ::_rect_id] != 1 } { set ::_rect_id 0 }
 	set tag "rect_$::_rect_id"
-	.can create oval $x1 $y1 [expr $x1 + $radius] [expr $y1 + $radius] -fill $colour -outline $colour -width 0 -tag $tag -state "hidden"
-	.can create oval [expr $x2-$radius] $y1 $x2 [expr $y1 + $radius] -fill $colour -outline $colour -width 0 -tag $tag -state "hidden"
-	.can create oval $x1 [expr $y2-$radius] [expr $x1+$radius] $y2 -fill $colour -outline $colour -width 0 -tag $tag -state "hidden"
-	.can create oval [expr $x2-$radius] [expr $y2-$radius] $x2 $y2 -fill $colour -outline $colour -width 0 -tag $tag -state "hidden"
-	.can create rectangle [expr $x1 + ($radius/2.0)] $y1 [expr $x2-($radius/2.0)] $y2 -fill $colour -outline $colour -width 0 -tag $tag -state "hidden"
-	.can create rectangle $x1 [expr $y1 + ($radius/2.0)] $x2 [expr $y2-($radius/2.0)] -fill $colour -outline $colour -width 0 -tag $tag -state "hidden"
+	.can create oval $x1 $y1 [expr $x1 + $radius] [expr $y1 + $radius] -fill $colour -outline $colour -width 0 \
+		-tag $tag -state "hidden"
+	.can create oval [expr $x2-$radius] $y1 $x2 [expr $y1 + $radius] -fill $colour -outline $colour -width 0 \
+		-tag $tag -state "hidden"
+	.can create oval $x1 [expr $y2-$radius] [expr $x1+$radius] $y2 -fill $colour -outline $colour -width 0 \
+		-tag $tag -state "hidden"
+	.can create oval [expr $x2-$radius] [expr $y2-$radius] $x2 $y2 -fill $colour -outline $colour -width 0 \
+		-tag $tag -state "hidden"
+	.can create rectangle [expr $x1 + ($radius/2.0)] $y1 [expr $x2-($radius/2.0)] $y2 -fill $colour -outline $colour \
+		-width 0 -tag $tag -state "hidden"
+	.can create rectangle $x1 [expr $y1 + ($radius/2.0)] $x2 [expr $y2-($radius/2.0)] -fill $colour -outline $colour \
+		-width 0 -tag $tag -state "hidden"
 	::add_visual_item_to_context $context $tag
 	incr ::_rect_id
 	return $tag
@@ -810,22 +816,22 @@ proc ::plugins::DGUI::rounded_rectangle_outline {context x1 y1 x2 y2 arc_offset 
 	set tag "rect_$::_rect_id"
 
 	.can create arc [expr $x1] [expr $y1+$arc_offset] [expr $x1+$arc_offset] [expr $y1] -style arc -outline $colour \
-		-width [expr $width-1] -tag $tag -start 90 -disabledoutline $::plugins::DGUI::disabled_color 
+		-width [expr $width-1] -tag $tag -start 90 -disabledoutline $::plugins::DGUI::disabled_color -state "hidden"
 	.can create arc [expr $x1] [expr $y2-$arc_offset] [expr $x1+$arc_offset] [expr $y2] -style arc -outline $colour \
-		-width [expr $width-1] -tag $tag -start 180 -disabledoutline $::plugins::DGUI::disabled_color
+		-width [expr $width-1] -tag $tag -start 180 -disabledoutline $::plugins::DGUI::disabled_color -state "hidden"
 	.can create arc [expr $x2-$arc_offset] [expr $y1] [expr $x2] [expr $y1+$arc_offset] -style arc -outline $colour \
-		-width [expr $width-1] -tag $tag -start 0 -disabledoutline $::plugins::DGUI::disabled_color
+		-width [expr $width-1] -tag $tag -start 0 -disabledoutline $::plugins::DGUI::disabled_color -state "hidden"
 	.can create arc [expr $x2-$arc_offset] [expr $y2] [expr $x2] [expr $y2-$arc_offset] -style arc -outline $colour \
-		-width [expr $width-1] -tag $tag -start -90 -disabledoutline $::plugins::DGUI::disabled_color
+		-width [expr $width-1] -tag $tag -start -90 -disabledoutline $::plugins::DGUI::disabled_color -state "hidden"
 	
 	.can create line [expr $x1+$arc_offset/2] [expr $y1] [expr $x2-$arc_offset/2] [expr $y1] -fill $colour \
-		-width $width -tag $tag -disabledfill $::plugins::DGUI::disabled_color
+		-width $width -tag $tag -disabledfill $::plugins::DGUI::disabled_color -state "hidden"
 	.can create line [expr $x2] [expr $y1+$arc_offset/2] [expr $x2] [expr $y2-$arc_offset/2] -fill $colour \
-		-width $width -tag $tag -disabledfill $::plugins::DGUI::disabled_color
+		-width $width -tag $tag -disabledfill $::plugins::DGUI::disabled_color -state "hidden"
 	.can create line [expr $x1+$arc_offset/2] [expr $y2] [expr $x2-$arc_offset/2] [expr $y2] -fill $colour \
-		-width $width -tag $tag -disabledfill $::plugins::DGUI::disabled_color
+		-width $width -tag $tag -disabledfill $::plugins::DGUI::disabled_color -state "hidden"
 	.can create line [expr $x1] [expr $y1+$arc_offset/2] [expr $x1] [expr $y2-$arc_offset/2] -fill $colour \
-		-width $width -tag $tag -disabledfill $::plugins::DGUI::disabled_color
+		-width $width -tag $tag -disabledfill $::plugins::DGUI::disabled_color -state "hidden"
 	
 	::add_visual_item_to_context $context $tag
 	incr ::_rect_id
@@ -1718,11 +1724,12 @@ proc ::plugins::DGUI::draw_rating { page field_name args } {
 	if { ! $has_ns } return
 	
 	set widget_name [args_get_option args -widget_name $field_name 1]
+msg "DGUI::draw_rating page=$page, widget=$widget_name 0"	
 	if { [info exists ${page}::widgets(${widget_name}_rating_button)] } {
 		set button_state [.can itemcget [subst \$${page}::widgets(${widget_name}_rating_button)] -state]
 		if { $button_state ne "normal" } { return }
 	} else { return }
-	
+msg "DGUI::draw_rating page=$page, widget=$widget_name 1"	
 	set ratingvar [args_add_option_if_not_exists args -rating_var "${page}::data($widget_name)"]
 	set n_ratings [args_get_option args -n_ratings 5 1]		
 	set use_halfs [args_get_option args -use_halfs 1 1]
@@ -1741,7 +1748,7 @@ proc ::plugins::DGUI::draw_rating { page field_name args } {
 	}
 
 	set varname [args_add_option_if_not_exists args -rating_var "${page}::data($widget_name)"]	
-	
+msg "DGUI::draw_rating page=$page, widget=$widget_name 2"	
 	if { $use_halfs == 1 } { set halfs_mult 2 } else { set halfs_mult 1 }  
 	if { ($min_value eq "" || $min_value == 0 ) && ($max_value eq "" || $max_value == 0) } {
 		set current_val [return_zero_if_blank [subst \$$varname]]
