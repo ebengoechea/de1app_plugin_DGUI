@@ -5,11 +5,11 @@
 namespace eval ::plugins::DGUI {
 	variable author "Enrique Bengoechea"
 	variable contact "enri.bengoechea@gmail.com"
-	variable version 1.0
-	variable description "'Describe GUI' provides a skin-independent, \"themable\", GUI \"mini framework\" for skin and plugin writters."
+	variable version 1.01
+	variable name [translate "Describe GUI"]
+	variable description "A skin-independent, \"themable\", GUI \"mini framework\" for skin and plugin writters."
 
 	variable pages {}
-	variable sdb_enabled 0
 	
 	# Aspect variables. Initialized here to default (Insight light theme), which is used if there's not a 
 	# ::plugins::DGUI::setup_aspect_<skin> proc available.
@@ -111,9 +111,63 @@ namespace eval ::plugins::DGUI {
 	
 	# Used to map booleans to their checkbox representation (square/square_check) in fontawesome.
 	variable checkbox_symbols_map {"\uf0c8" "\uf14a"}
+
+	# DATA DICTIONARY CONVENTIONS:
+	#  * The column name in the shot table or the lookup table must be identical to the array item key.
+	#  * The shot_field is the variable name in the shot file, settings section. May not match the array item key in 
+	#		cases like 'other_equipment'.
+	#  * desc_section has to be one of bean, bean_batch, equipment, extraction or people.
+	#  * data_type has to be one of text, long_text, category, numeric or date.
+	variable field_lookup_whats {name name_plural short_name short_name_plural \
+		desc_section db_table lookup_table db_type_column1 db_type_column2 shot_field data_type \
+		min_value max_value n_decimals default_value small_increment big_increment
+	}
+		
+	variable data_dictionary
+	array set data_dictionary {
+		profile_title {"Profile" "Profiles" "Profile" "Profiles" \
+			"" shot "" "" "" profile_title category 0 0 0}
+		bean_desc {"Beans" "Beans" "Beans" "Beans" \
+			bean V_shot "" "" "" bean_brand||bean_type category 0 0 0}
+		bean_brand {"Beans roaster" "Beans roasters" "Roaster" "Roasters" \
+			bean shot "" "" "" bean_brand category 0 0 0}
+		bean_type {"Beans type" "Beans types" "Name" "Names" \
+			bean shot "" "" "" bean_type category 0 50 0}
+		bean_notes {"Beans notes" "Beans notes" "Note" "Notes" \
+			bean_batch shot "" "" "" bean_notes long_text 0 1000 0}
+		roast_date {"Roast date" "Roast dates" "Date" "Dates" \
+			bean_batch shot "" "" "" roast_date date 0 0 0}
+		roast_level {"Roast level" "Roast levels" "Level" "Levels" \
+			bean_batch shot "" "" "" roast_level category 0 50 0}
+		grinder_model {"Grinder name" "Grinder names" "Grinder" "Grinders" \
+			equipment shot "" "" "" grinder_model category 0 100 0}
+		grinder_setting {"Grinder setting" "Grinder settings" "Setting" "Settings" \
+			equipment shot "" "" "" grinder_setting category 0 100 0}
+		grinder_dose_weight {"Dose weight" "Dose weights" "Dose" "Doses" \
+			extraction shot "" "" "" grinder_dose_weight numeric 0 30 1 18 0.1 1.0}
+		drink_weight {"Drink weight" "Drink weights" "Weight" "Weights" \
+			extraction shot "" "" "" drink_weight numeric 0 500 1 36 1.0 10.0}
+		drink_tds {"Total Dissolved Solids (TDS %)" "Total Dissolved Solids %" "TDS" "TDS" \
+			extraction shot "" "" "" drink_tds numeric 0 15 2 8 0.01 0.1}
+		drink_ey {"Extraction Yield (EY %)" "Extraction Yields %" "EY" "EYs" \
+			extraction shot "" "" "" drink_ey numeric 0 30 2 20 0.1 1.0}	
+		espresso_enjoyment {"Enjoyment (0-100)" "Enjoyments" "Enjoyment" "Enjoyment" \
+			extraction shot "" "" "" espresso_enjoyment numeric 0 100 0 50 1 10}
+		espresso_notes {"Notes" "Notes" "Notes" "Notes" \
+			extraction shot "" "" "" espresso_notes long_text 0 1000 0}	
+		my_name {"Barista" "Baristas" "Barista" "Baristas" \
+			people shot "" "" "" my_name category 0 100 0 people}
+		drinker_name {"Drinker" "Drinkers" "Drinker" "Drinkers" \
+			people shot "" "" "" drinker_name category 0 100 0}
+		skin {"Skin" "Skins" "Skin" "Skins" \
+			"" shot "" "" "" skin category 0 0 0}
+		beverage_type {"Beverage type" "Beverage types" "Bev type" "Bev types" \
+			"" shot "" "" "" beverage_type category 0 0 0}
+	}	
 	
-	namespace export get_font value_or_default args_add_option_if_not_exists args_remove_option args_has_option \
-		args_get_option args_get_prefixed set_previous_page enable_or_disable_widgets enable_widgets disable_widgets \
+	namespace export field_lookup field_names get_font value_or_default \
+		args_add_option_if_not_exists args_remove_option args_has_option args_get_option args_get_prefixed \
+		set_previous_page enable_or_disable_widgets enable_widgets disable_widgets \
 		show_or_hide_widgets show_widgets hide_widgets add_page add_cancel_button add_button1 add_button2 \
 		add_button add_text add_symbol add_variable add_entry add_select_entry add_multiline_entry \
 		relocate_dropdown_arrows set_scrollbars_dims relocate_text_wrt add_listbox listbox_get_sellection \
@@ -121,26 +175,25 @@ namespace eval ::plugins::DGUI {
 }
 
 proc ::plugins::DGUI::main {} {
-	variable sdb_enabled
 	msg "Starting the 'Describe GUI' plugin"
-	
-	if { [lsearch -exact [available_plugins] SDB] > -1 } {
-		if { [plugin_enabled SDB] } { 
-			load_plugin SDB
-			set sdb_enabled 1
-		}
-	}
+		
+	foreach ns {IS NUME TXT} { ::plugins::DGUI::${ns}::setup_ui }	
+}
+
+proc ::plugins::DGUI::preload {} {
+	msg "Preloading the 'Describe GUI' plugin"
 	
 	set skin $::settings(skin)
 	set skin_src_fn "[plugin_directory]/DGUI/setup_${skin}.tcl"
 	if { [file exists $skin_src_fn] } { 
-		source $skin_src_fn 	
+		source $skin_src_fn
 	} else { 
 		source "[plugin_directory]/DGUI/setup_Insight.tcl"
 	}
 	setup_aspect
 	
-	foreach ns {IS NUME TXT} { ::plugins::DGUI::${ns}::setup_ui }	
+	# No settings page for this plugin
+	return ""
 }
 
 proc ::plugins::DGUI::msg { msg } {
@@ -308,6 +361,65 @@ proc ::plugins::DGUI::args_extract_prefixed { proc_args prefix } {
 		}
 	}
 	return $new_args
+}
+
+# Looks up fields metadata in the data dictionary. 'what' can be a list with multiple items, then a list is returned.
+proc ::plugins::DGUI::field_lookup { field {what name} } {
+	variable data_dictionary
+	variable field_lookup_whats
+	
+	if { $field eq "" } return
+	
+	if { ![info exists data_dictionary($field)] } { 
+		msg "WARNING data field '$field' unmatched in proc field_lookup"
+		return {} 
+	}
+	
+	set result {}
+	foreach whatpart $what {
+		set match_idx [lsearch -all $field_lookup_whats $whatpart]
+		if { $match_idx == -1 } { 
+			msg "WARNING what item '$whatpart' unmatched in proc field_lookup"
+			lappend result {}
+		} else {
+			lappend result [lindex $data_dictionary($field) $match_idx]
+		}
+	}
+
+	if { [llength $result] == 1 } { set result [lindex $result 0] }
+	return $result
+}
+
+proc ::plugins::DGUI::field_names { {data_types {} } {db_tables {}} } {
+	variable data_dictionary
+	variable field_lookup_whats
+	
+	if { $data_types eq "" && $db_tables eq "" } {
+		return [array names data_dictionary]
+	} 
+	
+	if { $data_types eq "" } {
+		set dt_idx -1
+	} else { 
+		set dt_idx [lsearch -all $field_lookup_whats "data_type"]
+	}
+	if { $db_tables eq "" } {
+		set tab_idx -1
+	} else {
+		set tab_idx [lsearch -all $field_lookup_whats "db_table"]
+	}
+	
+	set fields {}	
+	foreach fn [array names data_dictionary] {
+		set data_type [lindex $data_dictionary($fn) $dt_idx]
+		set db_table [lindex $data_dictionary($fn) $tab_idx]
+		
+		set matches_dt [expr {$dt_idx == -1 || [lsearch -all $data_types $data_type] > -1 }]
+		set matches_tab [expr {$tab_idx == -1 || [lsearch -all $db_tables $db_table] > -1 }]
+		if { $matches_dt && $matches_tab } { lappend fields $fn }
+	}
+	
+	return $fields
 }
 
 # OUTDATED, USE A VALIDATION FUNCTION INSTEAD!
@@ -1034,18 +1146,12 @@ proc ::plugins::DGUI::add_entry { page field_name x_label y_label x_widget y_wid
 
 	if { $::debugging } { msg "add_entry $page - $widget_name" }
 	# If the field name is found in the data dictionary, use its metadata unless they are provided in the proc call
-	if { $::plugins::DGUI::sdb_enabled } {
-		lassign [::plugins::SDB::field_lookup $field_name {name data_type n_decimals min_value max_value \
-			small_increment big_increment default_value}] \
-			f_label f_data_type f_n_decimals f_min_value f_max_value f_small_increment f_big_increment f_default_value
-		foreach fn {label data_type n_decimals min_value max_value small_increment big_increment default_value} {
-			set $fn [args_get_option args "-$fn" [subst \$f_$fn] 1]
-		}		
-	} else {
-		foreach fn "label data_type n_decimals min_value max_value small_increment big_increment default_value" {
-			set $fn [value_or_default opts(-$fn) ""] 
-		}		
-	}
+	lassign [field_lookup $field_name {name data_type n_decimals min_value max_value \
+		small_increment big_increment default_value}] \
+		f_label f_data_type f_n_decimals f_min_value f_max_value f_small_increment f_big_increment f_default_value
+	foreach fn {label data_type n_decimals min_value max_value small_increment big_increment default_value} {
+		set $fn [args_get_option args "-$fn" [subst \$f_$fn] 1]
+	}		
 	
 	# Parse arguments to extract those that are not going to be re-passed through to "entry", and set defaults
 	# for those that the client code has not defined.
@@ -1256,16 +1362,10 @@ proc ::plugins::DGUI::add_multiline_entry { page field_name x_label y_label x_wi
 
 	if { $::debugging } { msg "add_multiline_entry $page - $field_name" }
 	# If the field name is found in the data dictionary, use its metadata unless they are provided in the proc call
-	if { $::plugins::DGUI::sdb_enabled } {
-		lassign [::plugins::SDB::field_lookup $field_name {name data_type n_decimals min_value max_value}] \
-			f_label f_data_type f_n_decimals f_min_value f_max_value 	
-		foreach fn {label data_type n_decimals min_value max_value} {
-			set $fn [args_get_option args "-$fn" [subst \$f_$fn] 1]
-		}
-	} else {
-		foreach fn "label data_type n_decimals min_value max_value" {
-			set $fn [value_or_default opts(-$fn) ""] 
-		}
+	lassign [field_lookup $field_name {name data_type n_decimals min_value max_value}] \
+		f_label f_data_type f_n_decimals f_min_value f_max_value 	
+	foreach fn {label data_type n_decimals min_value max_value} {
+		set $fn [args_get_option args "-$fn" [subst \$f_$fn] 1]
 	}
 	
 	set textvariable [args_add_option_if_not_exists args -textvariable "${page}::data($field_name)"]
@@ -1612,7 +1712,7 @@ proc ::plugins::DGUI::add_checkbox { page check_variable x y {command {}} args }
 		}			
 	}
 	
-	set $check_variable [string is true \$$check_variable]
+	set $check_variable [string is true [subst \$$check_variable]]
 	
 	set font_size [args_get_option args -font_size $::plugins::DGUI::font_size 1]
 	set font [args_get_option args -font [::plugins::DGUI::get_font $::plugins::DGUI::font $font_size] 1]
@@ -1669,16 +1769,10 @@ proc ::plugins::DGUI::add_rating { page field_name x_label y_label x_widget y_wi
 	} 
 		
 	# If the field name is found in the data dictionary, use its metadata unless they are provided in the proc call
-	if { $::plugins::DGUI::sdb_enabled } {
-		lassign [::plugins::SDB::field_lookup $field_name {name data_type n_decimals min_value max_value}] \
-			f_label f_data_type f_n_decimals f_min_value f_max_value 	
-		foreach fn {label data_type n_decimals min_value max_value} {
-			set $fn [args_get_option args "-$fn" [subst \$f_$fn] 1]
-		}
-	} else {
-		foreach fn "label data_type n_decimals min_value max_value" {
-			set $fn [value_or_default opts(-$fn) ""] 
-		}
+	lassign [field_lookup $field_name {name data_type n_decimals min_value max_value}] \
+		f_label f_data_type f_n_decimals f_min_value f_max_value 	
+	foreach fn {label data_type n_decimals min_value max_value} {
+		set $fn [args_get_option args "-$fn" [subst \$f_$fn] 1]
 	}
 	
 	if { $x_label > -1 && $y_label > -1 } { 
@@ -1729,26 +1823,20 @@ msg "DGUI::draw_rating page=$page, widget=$widget_name 0"
 		set button_state [.can itemcget [subst \$${page}::widgets(${widget_name}_rating_button)] -state]
 		if { $button_state ne "normal" } { return }
 	} else { return }
-msg "DGUI::draw_rating page=$page, widget=$widget_name 1"	
+	
 	set ratingvar [args_add_option_if_not_exists args -rating_var "${page}::data($widget_name)"]
 	set n_ratings [args_get_option args -n_ratings 5 1]		
 	set use_halfs [args_get_option args -use_halfs 1 1]
 		
 	# If the field name is found in the data dictionary, use its metadata unless they are provided in the proc call
-	if { $::plugins::DGUI::sdb_enabled } {
-		lassign [::plugins::SDB::field_lookup $field_name {name data_type n_decimals min_value max_value}] \
-			f_label f_data_type f_n_decimals f_min_value f_max_value 	
-		foreach fn {label data_type n_decimals min_value max_value} {
-			set $fn [args_get_option args "-$fn" [subst \$f_$fn] 1]
-		}
-	} else {
-		foreach fn "label data_type n_decimals min_value max_value" {
-			set $fn [value_or_default opts(-$fn) ""] 
-		}
+	lassign [field_lookup $field_name {name data_type n_decimals min_value max_value}] \
+		f_label f_data_type f_n_decimals f_min_value f_max_value 	
+	foreach fn {label data_type n_decimals min_value max_value} {
+		set $fn [args_get_option args "-$fn" [subst \$f_$fn] 1]
 	}
 
 	set varname [args_add_option_if_not_exists args -rating_var "${page}::data($widget_name)"]	
-msg "DGUI::draw_rating page=$page, widget=$widget_name 2"	
+	
 	if { $use_halfs == 1 } { set halfs_mult 2 } else { set halfs_mult 1 }  
 	if { ($min_value eq "" || $min_value == 0 ) && ($max_value eq "" || $max_value == 0) } {
 		set current_val [return_zero_if_blank [subst \$$varname]]
@@ -1909,8 +1997,8 @@ proc ::plugins::DGUI::IS::load_page { item_type item_variable items args } {
 	
 	if { [info exists opts(-page_title)] } {
 		set data(page_title) $opts(-page_title)
-	} elseif { $::plugins::DGUI::sdb_enabled } {
-		set item_name [::plugins::SDB::field_lookup $item_type name]
+	} else {
+		set item_name [field_lookup $item_type name]
 		if { $item_name eq "" } {
 			set data(page_title) [translate "Select an item"]
 		} else {
@@ -2193,16 +2281,10 @@ proc ::plugins::DGUI::NUME::load_page { field_name { num_variable {}} args } {
 	
 	# If the field name is found in the data dictionary, use its metadata unless they are provided in the proc call	
 	set opt_names "n_decimals min_value max_value default_value small_increment big_increment"
-	if { $::plugins::DGUI::sdb_enabled } {
-		lassign [::plugins::SDB::field_lookup $field_name "name data_type $opt_names"] f_name f_data_type f_n_decimals \
-			f_min_value f_max_value f_default_value f_small_increment f_big_increment
-		foreach fn $opt_names {
-			set data($fn) [value_or_default opts(-$fn) [subst \$f_$fn]] 
-		}
-	} else {
-		foreach fn $opt_names {
-			set data($fn) [value_or_default opts(-$fn) ""] 
-		}		
+	lassign [field_lookup $field_name "name data_type $opt_names"] f_name f_data_type f_n_decimals \
+		f_min_value f_max_value f_default_value f_small_increment f_big_increment
+	foreach fn $opt_names {
+		set data($fn) [value_or_default opts(-$fn) [subst \$f_$fn]] 
 	}
 	
 	if { $field_name ne "" && $f_data_type ne "numeric" } {
@@ -2549,12 +2631,7 @@ proc ::plugins::DGUI::TXT::load_page { field_name { text_variable {} } {read_onl
 	}
 	
 	# If the field name is found in the data dictionary, use its metadata unless they are provided in the proc call
-	if { $::plugins::DGUI::sdb_enabled } {
-		lassign [::plugins::SDB::field_lookup $field_name "name data_type"] name data_type
-	} else {
-		set name $field_name
-		set data_type "text"
-	}
+	lassign [field_lookup $field_name "name data_type"] name data_type
 	
 	set data(field_name) $field_name
 	if { [info exists opts(-callback_cmd)] } {
