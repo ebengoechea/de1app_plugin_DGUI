@@ -7,7 +7,8 @@ namespace eval ::plugins::DGUI {
 	variable contact "enri.bengoechea@gmail.com"
 	variable version 1.01
 	variable name [translate "Describe GUI"]
-	variable description "A skin-independent, \"themable\", GUI \"mini framework\" for skin and plugin writters."
+	variable description "A skin-independent, \"themable\", GUI \"mini framework\" for skin and plugin writters.
+Simplify page creation, auto-adapt aspect to current skin/theme, ready-made widget combos and full-page field editors."
 
 	variable pages {}
 	
@@ -180,7 +181,8 @@ proc ::plugins::DGUI::main {} {
 	foreach ns {IS NUME TXT} { ::plugins::DGUI::${ns}::setup_ui }	
 }
 
-proc ::plugins::DGUI::preload {} {
+proc ::plugins::DGUI::preload {} {	
+	if { ![info exists ::debugging] } { set ::debugging 0 }
 	msg "Preloading the 'Describe GUI' plugin"
 	
 	set skin $::settings(skin)
@@ -211,44 +213,6 @@ proc ::plugins::DGUI::setup_aspect { } {
 		::plugins::DGUI::setup_aspect_$skin
 	} else {
 		::plugins::DGUI::setup_aspect_Insight
-#		# Default hardcoded aspect if nothing selected (use Insight defaults)
-#		#variable page_bg_image "[plugin_directory]/DGUI/bg_default.jpg"
-#		variable page_bg_image ""
-#		variable bg_color "#ffffff"
-#		variable font_color "#7f879a"
-#		variable page_title_color "#7f879a"
-#		variable remark_color orange
-#		variable error_color red
-#		variable disabled_color "#ddd"
-#		variable highlight_color $font_color
-#		variable insert_bg_color orange
-#		variable font "Helv"
-#		variable font_size 7
-#		variable header_font "Helv_bold"
-#		variable header_font_size 11
-#		variable section_font_size 10
-#		variable entry_relief flat
-#		
-#		variable button_font "Helv_bold"
-#		variable button_font_fill "#ffffff"
-#		variable button_fill "#c0c5e3"
-#				
-#		variable listbox_relief flat
-#		variable listbox_bwidth 0
-#		variable listbox_fg $font_color
-#		variable listbox_sfg black
-#		variable listbox_bg $bg_color
-#		variable listbox_sbg "#c0c4e1"
-#		variable listbox_sbwidth 0
-#		variable listbox_hthickness 1
-#		variable listbox_hcolor $font_color
-#
-#		variable scrollbar_bwidth 0
-#		variable scrollbar_relief flat		
-#		variable scrollbar_bg "#d3dbf3"
-#		variable scrollbar_fg "#FFFFFF"
-#		variable scrollbar_troughcolor "#f7f6fa"
-#		variable scrollbar_hthickness 0			
 	}
 }
 
@@ -422,13 +386,13 @@ proc ::plugins::DGUI::field_names { {data_types {} } {db_tables {}} } {
 	return $fields
 }
 
-# OUTDATED, USE A VALIDATION FUNCTION INSTEAD!
+# TODO: USE A MEANINGFUL VALIDATION FUNCTION INSTEAD!
 proc ::plugins::DGUI::keypress_is_number_or_dot {keyvalue} {
 	# set ::DYE::debug_text "PRESSED \"$keyvalue\""
 	return [expr { [string is integer $keyvalue] || $keyvalue eq "period" } ]
 }
 
-# OUTDATED, USE A VALIDATION FUNCTION INSTEAD!
+# TODO: USE A MEANINGFUL VALIDATION FUNCTION INSTEAD!
 proc ::plugins::DGUI::keypress_is_number_or_slash {keyvalue} {
 	#set ::DYE::debug_text "PRESSED \"$keyvalue\""
 	return [expr { [string is integer $keyvalue] || $keyvalue eq "slash" } ]
@@ -1818,7 +1782,7 @@ proc ::plugins::DGUI::draw_rating { page field_name args } {
 	if { ! $has_ns } return
 	
 	set widget_name [args_get_option args -widget_name $field_name 1]
-msg "DGUI::draw_rating page=$page, widget=$widget_name 0"	
+	
 	if { [info exists ${page}::widgets(${widget_name}_rating_button)] } {
 		set button_state [.can itemcget [subst \$${page}::widgets(${widget_name}_rating_button)] -state]
 		if { $button_state ne "normal" } { return }
