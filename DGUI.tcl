@@ -24,11 +24,12 @@ Simplify page creation, auto-adapt aspect to current skin/theme, ready-made widg
 	variable button2_img {}	
 	variable button2_width 384
 	variable button2_height 192
-	# button 3 is small-size button used for the filter icon in the History Viewer
+	# button 3 is usual Ok button in Insight (245 x 65)
 	variable button3_img {}
-	variable button3_width 0
-	variable button3_height 0
+	variable button3_width 490
+	variable button3_height 120
 	variable button_font "font"
+	
 	variable button_font_fill "#ffffff"
 	variable button_fill "#c0c5e3"
 					
@@ -787,6 +788,69 @@ proc ::plugins::DGUI::add_button2 { page widget_name x y label state_variable sy
 			-font [::plugins::DGUI::get_font $::plugins::DGUI::button_font $state_size] -fill $state_fill \
 			-justify "center" -anchor "center" -textvariable $state_variable]
 		if { $has_ns } { set "${page}::widgets(${widget_name}_state)" $w }
+	}
+	
+	set w [::add_de1_button $page $command [expr {$x-14}] [expr {$y-12}] \
+		[expr {$x+$width+10}] [expr {$y+$height+10}]]
+	if { $has_ns } { set "${page}::widgets(${widget_name})" $w }
+	return $w
+}
+
+# Adds a button3 (the standard "Ok" wide short button in DSx).
+# The button can have any of the following 3 components:
+#	* label: Main text
+#	* symbol: A fontawesome symbol shown on the left third of the button
+# Adds to the namespace widgets array <widget_name> (clickable button area, returned by the function), 
+#	<widget_name>_symbol, <widget_name>_label and <widget_name>_state.
+# New named options_
+#	-label_fill, -symbol_fill, -state_fill the font color of each element.
+proc ::plugins::DGUI::add_button3 { page widget_name x y label symbol {command {}} args } {
+	set has_ns [page_name_is_namespace $page]
+	
+	set width [args_get_option args -width $::plugins::DGUI::button3_width 1]
+	set height [args_get_option args -width $::plugins::DGUI::button3_height 1]
+	set label_fill [args_get_option args -label_fill $::plugins::DGUI::button_font_fill 1]
+	set symbol_fill [args_get_option args -symbol_fill $::plugins::DGUI::button_font_fill 1]
+	set fill [args_get_option args -state_fill $::plugins::DGUI::button_fill 1]
+	
+	if { $::plugins::DGUI::button3_img eq "" } {
+		if { $::settings(skin) eq "DSx" } {
+			set w [::plugins::DGUI::rounded_rectangle_outline $page $x $y [expr {$x+$width}] [expr {$y+$height}] \
+				[rescale_x_skin 60] $fill 3]
+		} else {
+			set w [::plugins::DGUI::rounded_rectangle $page $x $y [expr {$x+$width}] [expr {$y+$height}] \
+				[rescale_x_skin 40] $fill]
+		}
+	} else {
+		#set w [::add_de1_image $page $x $y $::plugins::DGUI::button3_img ]
+	}
+	if { $has_ns } { set "${page}::widgets(${widget_name}_img)" $w } 
+
+	if { $symbol eq "" } {
+		set x_label [expr {$x+$width/2}]
+	} else {
+		set x_label [expr {$x+$width*2/3}]
+	}
+	set y_label [expr {$y+$height/2}]
+	set label_size 8
+	
+	if { $symbol ne "" } {
+		set w [::add_de1_text $page [expr {$x+$width/5}] [expr {$y+$height/2}] \
+			-text [subst \$::plugins::DGUI::symbols($symbol)] \
+			-fill $symbol_fill -font fontawesome_reg_small -justify "center" -anchor "center"]
+		if { $has_ns } { set "${page}::widgets(${widget_name}_symbol)" $w } 
+	}
+	if { $label eq "" && [info exists "${page}::data(${widget_name}_label)"] } {
+		set w [::add_de1_variable $page $x_label [expr {$y_label+3}] \
+			-font [::plugins::DGUI::get_font $::plugins::DGUI::button_font $label_size] -fill $label_fill \
+			-justify "center" -anchor "center" \
+			-textvariable "\$${page}::data(${widget_name}_label)" ]
+		if { $has_ns } { set "${page}::widgets(${widget_name}_label)" $w }
+	} else {
+		set w [::add_de1_text $page $x_label $y_label \
+			-text $label -font [::plugins::DGUI::get_font $::plugins::DGUI::button_font $label_size] -fill $label_fill \
+			-justify "center" -anchor "center"]
+		if { $has_ns } { set "${page}::widgets(${widget_name}_label)" $w }
 	}
 	
 	set w [::add_de1_button $page $command [expr {$x-14}] [expr {$y-12}] \
@@ -2590,6 +2654,7 @@ proc ::plugins::DGUI::TXT::load_page { field_name { text_variable {} } {read_onl
 	variable widgets
 	array set opts $args
 	
+msg "TXT::load_page, widgets names='[array names widgets]'"	
 	foreach fn [array names data] {
 		if { $fn ne "page_name" } { set data($fn) {} }
 	}
@@ -2628,13 +2693,13 @@ proc ::plugins::DGUI::TXT::load_page { field_name { text_variable {} } {read_onl
 		set data(value) [subst \$$text_variable]
 	}
 	
-	enable_or_disable_widgets [expr !$read_only] "value*" $ns
+	enable_or_disable_widgets [expr {!$read_only}] "value*" $ns
 }
 
 proc ::plugins::DGUI::TXT::setup_ui {} {
 	variable data
 	variable widgets
-	set page [namespace current]	
+	set page [namespace current]
 	
 	add_page $page -buttons_loc center
 	

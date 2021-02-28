@@ -2,19 +2,18 @@
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [1.02] - 2021-03-?
+## [1.02] - 2021-02-28
 
 ### Added
-- New proc `set_symbols`.
+- New procs `set_symbols` and `add_button3`.
+- New namespace variable `github_repo` for the `GitHub plugins` plugin.
 
 ### Changed
 - Adapt to new plugins and logging systems in de1app v1.34.14.
 - Improve description.
 - Correct bug in `add_variable` proc when referencing a textvariable name from the page data array.
-- Default fontawesome symbols now are only those used by DGUI itself. Others must be declared by client code, using 
+- Default fontawesome symbols now are only those used by DGUI itself. Others must be declared by client code, using the
 new proc `set_symbols`.
-- New namespace variable `github_repo` for the `GitHub plugins` plugin.
-
 
 ## [1.01] - 2021-02-20
 
