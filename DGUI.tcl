@@ -5,7 +5,7 @@
 namespace eval ::plugins::DGUI {
 	variable author "Enrique Bengoechea"
 	variable contact "enri.bengoechea@gmail.com"
-	variable version 1.01
+	variable version 1.02
 	variable name [translate "Describe GUI"]
 	variable github_repo ebengoechea/de1app_plugin_DGUI
 	variable description [translate "A skin-independent, \"themable\", GUI \"mini framework\" for skin and plugin writters.
