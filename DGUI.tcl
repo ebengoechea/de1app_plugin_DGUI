@@ -7,8 +7,9 @@ namespace eval ::plugins::DGUI {
 	variable contact "enri.bengoechea@gmail.com"
 	variable version 1.01
 	variable name [translate "Describe GUI"]
-	variable description "A skin-independent, \"themable\", GUI \"mini framework\" for skin and plugin writters.
-Simplify page creation, auto-adapt aspect to current skin/theme, ready-made widget combos and full-page field editors."
+	variable github_repo ebengoechea/de1app_plugin_DGUI
+	variable description [translate "A skin-independent, \"themable\", GUI \"mini framework\" for skin and plugin writters.
+Simplify page creation, auto-adapt aspect to current skin/theme, ready-made widget combos and full-page field editors."]
 
 	variable pages {}
 	
@@ -183,7 +184,6 @@ proc ::plugins::DGUI::main {} {
 
 proc ::plugins::DGUI::preload {} {	
 	if { ![info exists ::debugging] } { set ::debugging 0 }
-	msg "Preloading the 'Describe GUI' plugin"
 	
 	set skin $::settings(skin)
 	set skin_src_fn "[plugin_directory]/DGUI/setup_${skin}.tcl"
@@ -198,8 +198,12 @@ proc ::plugins::DGUI::preload {} {
 	return ""
 }
 
-proc ::plugins::DGUI::msg { msg } {
-	::msg "::plugins::DGUI: $msg"
+proc ::plugins::DGUI::msg { {flag ""} args } {
+	if { [string range $flag 0 0] eq "-" && [llength $args] > 0 } {
+		::logging::default_logger $flag "::plugins::DGUI" {*}$args
+	} else {
+		::logging::default_logger "::plugins::DGUI" $flag {*}$args
+	}
 }
 
 # Setup the general aspect parameters (colors, fonts etc.) depending on the skin used.
@@ -240,7 +244,7 @@ proc ::plugins::DGUI::get_font { {font_name {}} {size {}} } {
 		return [::get_font $font_name $size]
 	}
 }
-	
+
 # A one-liner to return a default if a variable is undefined.
 # Similar to ifexists in updater.tcl but does not set var (only returns the new value), and assigns empty values
 proc ::plugins::DGUI::value_or_default { var default } {
@@ -1037,10 +1041,10 @@ proc ::plugins::DGUI::add_variable { page x y textvariable args } {
 	set anchor [args_add_option_if_not_exists args -anchor nw]
 	
 	if { $has_ns && [string is wordchar $textvariable] && [info exists "${page}::data($textvariable)"] } {
-		set textvariable "${page}::data($textvariable)"
 		if { ![args_has_option args -widget_name] } {
 			set widget_name $textvariable
-		}
+		}		
+		set textvariable "\$${page}::data($textvariable)"
 	} else {
 		set widget_name [args_get_option args -widget_name {} 1]
 	}
