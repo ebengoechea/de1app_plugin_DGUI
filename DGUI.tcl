@@ -74,41 +74,19 @@ Simplify page creation, auto-adapt aspect to current skin/theme, ready-made widg
 	# Symbols in Fontawesome regular, see https://fontawesome.com/icons?d=gallery
 	variable symbols
 	array set symbols {
-		filter "\uf0b0"
-		people "\uf500"
-		plug "\uf1e6"
-		cup "\uf0f4"
-		eye "\uf06e"
-		sort_down "\uf0dd"
-		file_upload "\uf574"
-		file_import "\uf56f"
-		file_contract "\uf56c"
-		cloud_download_alt "\uf381"
-		plus "\uf067"	
-		eraser "\uf12d"
-		pencil "\uf303"
-		circle "\uf111"
-		circle_right "\uf138"
-		circle_left "\uf137"
-		circle_up "\uf331"
-		circle_down "\uf32d"
-		circle_times "\uf057"
-		circle_check "\uf058"
 		square "\uf0c8"
 		square_check "\uf14a"
-		paintbrush "\uf5a9"
-		db "\uf1c0"
-		sync "\uf021"
+		sort_down "\uf0dd"
 		star "\uf005"
 		half_star "\uf089"
-		bars "\uf0c9"
-		window_close "\uf410"
 		chevron_left "\uf053"
 		chevron_double_left "\uf323"
 		arrow_to_left "\uf33e"
 		chevron_right "\uf054"
 		chevron_double_right "\uf324"
 		arrow_to_right "\uf340"
+		eraser "\uf12d"
+		eye "\uf06e"
 	}
 	
 	# Used to map booleans to their checkbox representation (square/square_check) in fontawesome.
@@ -167,7 +145,7 @@ Simplify page creation, auto-adapt aspect to current skin/theme, ready-made widg
 			"" shot "" "" "" beverage_type category 0 0 0}
 	}	
 	
-	namespace export field_lookup field_names get_font value_or_default \
+	namespace export field_lookup field_names get_font set_symbols value_or_default \
 		args_add_option_if_not_exists args_remove_option args_has_option args_get_option args_get_prefixed \
 		set_previous_page enable_or_disable_widgets enable_widgets disable_widgets \
 		show_or_hide_widgets show_widgets hide_widgets add_page add_cancel_button add_button1 add_button2 \
@@ -245,6 +223,24 @@ proc ::plugins::DGUI::get_font { {font_name {}} {size {}} } {
 	}
 }
 
+# Define Fontawesome symbols by name. If a symbol name is already defined and the value differs, it is not changed
+#	and a warning added to the log.
+proc ::plugins::DGUI::set_symbols { args } {
+	variable symbols
+	
+	set n [expr {[llength $args]-1}]
+	for { set i 0 } { $i < $n } { incr i 2 } {
+		set sn [lindex $args $i]
+		set sv [lindex $args [expr {$i+1}]]
+		set idx [lsearch [array names symbols] $sn]
+		if { $idx == -1 } {
+			msg "add symbol $sn='$sv'"
+			set symbols($sn) $sv
+		} elseif { $symbols($sn) ne $sv } {
+			msg -WARN "symbol '$sn' already defined with a different value"
+		}
+	}
+}
 # A one-liner to return a default if a variable is undefined.
 # Similar to ifexists in updater.tcl but does not set var (only returns the new value), and assigns empty values
 proc ::plugins::DGUI::value_or_default { var default } {
