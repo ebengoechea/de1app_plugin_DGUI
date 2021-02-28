@@ -813,16 +813,12 @@ proc ::plugins::DGUI::add_button3 { page widget_name x y label symbol {command {
 	set symbol_fill [args_get_option args -symbol_fill $::plugins::DGUI::button_font_fill 1]
 	set fill [args_get_option args -state_fill $::plugins::DGUI::button_fill 1]
 	
-	if { $::plugins::DGUI::button3_img eq "" } {
-		if { $::settings(skin) eq "DSx" } {
-			set w [::plugins::DGUI::rounded_rectangle_outline $page $x $y [expr {$x+$width}] [expr {$y+$height}] \
-				[rescale_x_skin 60] $fill 3]
-		} else {
-			set w [::plugins::DGUI::rounded_rectangle $page $x $y [expr {$x+$width}] [expr {$y+$height}] \
-				[rescale_x_skin 40] $fill]
-		}
+	if { $::settings(skin) eq "DSx" } {
+		set w [::plugins::DGUI::rounded_rectangle_outline $page $x $y [expr {$x+$width}] [expr {$y+$height}] \
+			[rescale_x_skin 60] $fill 3]
 	} else {
-		#set w [::add_de1_image $page $x $y $::plugins::DGUI::button3_img ]
+		set w [::plugins::DGUI::rounded_rectangle $page $x $y [expr {$x+$width}] [expr {$y+$height}] \
+			[rescale_x_skin 40] $fill]
 	}
 	if { $has_ns } { set "${page}::widgets(${widget_name}_img)" $w } 
 
