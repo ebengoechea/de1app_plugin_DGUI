@@ -1653,16 +1653,18 @@ proc ::plugins::DGUI::add_listbox { page widget_name x_label y_label x_widget y_
 	
 	set widget [::add_de1_widget $page listbox $x_widget $y_widget {} \
 		-height $height -width [expr {int($width * $::globals(entry_length_multiplier))}] \
-		-yscrollcommand "scale_scroll ${page}::widgets(${widget_name}_slider)" -exportselection 1 {*}$args ] 
+		-yscrollcommand "scale_scroll_new \$${page}::widgets(${widget_name}) ${page}::widgets(${widget_name}_slider)" \
+		-exportselection 1 {*}$args ] 
+	
 	if { $has_ns } { set "${page}::widgets($widget_name)" $widget }
 	
 	# Draw the scrollbar off screen so that it gets resized and moved to the right place on the first draw
 	if { $has_ns } { set "${page}::widgets(${widget_name}_slider)" 0 }
-	
+
 	set w [::add_de1_widget $page scale [expr {$x_widget+10*$width}] $y_widget {} \
-		-from 0 -to .50 -bigincrement 0.2 -borderwidth 1 -showvalue 0 -resolution .01 \
+		-from 0 -to 1.0 -bigincrement 0.2 -borderwidth 1 -showvalue 0 -resolution .01 \
 		-length $scrollbar_height -width $scrollbar_width -sliderlength $sliderlength \
-		-variable "${page}::widgets(advsteps_$widget_name)" \
+		-variable "${page}::widgets(${widget_name}_slider)" \
 		-command " listbox_moveto \$${page}::widgets($widget_name) \$${page}::widgets(${widget_name}_slider) " \
 		-background $::plugins::DGUI::scrollbar_bg -foreground $::plugins::DGUI::scrollbar_fg \
 		-troughcolor $::plugins::DGUI::scrollbar_troughcolor -relief $::plugins::DGUI::scrollbar_relief \
