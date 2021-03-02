@@ -144,6 +144,8 @@ Simplify page creation, auto-adapt aspect to current skin/theme, ready-made widg
 			"" shot "" "" "" skin category 0 0 0}
 		beverage_type {"Beverage type" "Beverage types" "Bev type" "Bev types" \
 			"" shot "" "" "" beverage_type category 0 0 0}
+		repository_links {"Repository link" "Repository links" "Repo link" "Repo links" \
+			"" "" "" "" "" repository_links "array" 0 0 0}
 	}	
 	
 	namespace export field_lookup field_names get_font set_symbols value_or_default \
